@@ -1,0 +1,25 @@
+# 環境設定敏感檔案
+.env
+
+# Python 快取與虛擬環境
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# 測試框架快取
+.pytest_cache/
+
+# Streamlit 快取
+.streamlit/
+
+# 暫存與備份檔
+*.bak
+bench_out.txt
+pytest_out.txt
+
+# 作業系統暫存檔
+.DS_Store
+Thumbs.db

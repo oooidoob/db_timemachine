@@ -1,0 +1,17 @@
+# 資料庫連線套件
+pymysql>=1.1.0
+cryptography>=42.0.0
+pyodbc>=5.0.0
+
+# 環境變數管理
+python-dotenv>=1.0.0
+
+# 測試框架
+pytest>=8.0.0
+
+# 互動式使用者介面
+streamlit>=1.35.0
+
+# 數據分析與視覺化
+pandas>=2.2.0
+matplotlib>=3.8.0

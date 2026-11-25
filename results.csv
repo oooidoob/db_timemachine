@@ -1,0 +1,7 @@
+﻿design,short,storage_mb,snapshots,write_tps_mean,write_tps_std,query_single_ms,query_single_noidx_ms,query_all_ms,query_all_noidx_ms,restore_1_ms,restore_1000_ms,restore_all_ms,restore_verify_pct,correctness_timepoint_pct,correctness_account_pct
+Baseline-MySQL (基準線),Baseline,0.484,,68.44,3.16,1.97,,62.34,,,,,,,
+設計 A (定期快照),設計 A,14.516,18,66.17,3.29,3.85,,42.68,,22.1,29693.84,1205.34,100.0,11.0,97.55
+設計 B (觸發器+歷史表),設計 B,1.484,,58.42,3.74,2.24,3.02,69.09,78.33,19.68,17678.6,958.38,100.0,100.0,100.0
+設計 C (事件溯源),設計 C,2.969,,55.32,8.71,2.67,6.57,122.91,127.78,18.2,21793.04,18661.58,100.0,100.0,100.0
+Baseline-MariaDB (基準線),Base-MDB,0.484,,229.29,0.71,1.65,,59.77,,,,,,,
+設計 D (MariaDB原生),設計 D,1.516,,198.31,8.15,2.89,,65.73,,6.71,7225.47,887.87,100.0,100.0,100.0
