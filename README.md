@@ -18,8 +18,29 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-打開瀏覽器後，在左側欄切換到 **「🌐 通用即時監控模式 (任意資料庫/資料表)」**，選擇你自己的資料庫引擎就能立即開始監控與還原！  
-*(若要重現本專題完整的「四種架構效能評測與 19 項單元測試」，再往下看第五～六章即可)*
+### 📱 互動網頁介面 (`app.py`) 兩大核心模式
+
+#### 1. 🔬 專題實驗模式（A / B / C / D 四種設計比較）
+- 針對「銀行帳戶」示範模型，自由切換四種歷史架構（定期快照、觸發器歷史表、事件溯源、MariaDB 原生版本化），即時對比儲存空間（MB）。
+- 提供 **「一鍵製造情境」** 按鈕，自動模擬帳戶遭誤刪與惡意篡改，並以紅、黃、綠三色高亮標示差異，執行單筆／全表還原與完整時間軸稽核。
+
+#### 2. 🌐 通用即時監控模式（任意資料庫 ＆ 任意資料表）
+> 本專案最重要的實務延伸實作：無須修改原有系統程式碼，即可對任意自建資料庫與任意欄位結構的資料表進行即時監控與時光機救援。
+
+- **支援三大主流資料庫引擎**：
+  - **Microsoft SQL Server (MSSQL)**：支援本機 **Windows 驗證**免密碼登入（可直接搭配 **SSMS** 實作展示），自動處理 UTC 與本機時區轉換。
+  - **MySQL 8** 與 **MariaDB 11**：可透過側邊欄自訂主機、埠號與帳密連線。
+- **動態探索任意資料庫與資料表**：自動掃描伺服器上的使用者資料庫與資料表（免寫死表名或欄位）。
+- **一鍵為任意表掛載時光機**：
+  - **SQL Server**：一鍵開啟原生 Temporal Table (`SYSTEM_VERSIONING = ON`)。
+  - **MariaDB**：一鍵開啟原生系統版本化 (`ADD SYSTEM VERSIONING`)。
+  - **MySQL 8**：一鍵建立 `{表名}_tm_history` JSON 影子表並自動安裝 `INSERT / UPDATE / DELETE` 觸發器。
+- **即時監控與無損救援**：
+  - 開啟 **「自動監控 (3秒)」** 後，任何外部工具（如 SSMS、MySQL Workbench、後端程式）對資料表的修改都會在 3 秒內即時呈現在網頁上。
+  - 支援任意時間點雙表對照與三色差異標記（🔴 被刪除、🟡 欄位變更、🟢 後續新增）。
+  - 支援依主鍵執行 **單筆還原**、**全表一鍵還原**（含 SQL Server `IDENTITY` 自動編號欄位自動處理）與 **單筆完整異動時間軸** 查詢。
+
+*(若要重現本專題完整的「四種架構效能評測與單元測試」，請往下參考第五～六章)*
 
 ---
 
@@ -153,7 +174,9 @@ db_timemachine/
 │   ├── snapshot.py              # 設計 A：定期快照實作
 │   ├── trigger_history.py       # 設計 B：觸發器歷史表實作
 │   ├── event_sourcing.py        # 設計 C：事件溯源與分批重播實作
-│   └── native_temporal.py       # 設計 D：MariaDB 原生時態實作
+│   ├── native_temporal.py       # 設計 D：MariaDB 原生時態實作
+│   ├── generic_monitor.py       # 通用監控模組 (支援任意 MySQL / MariaDB 表)
+│   └── mssql_monitor.py         # SQL Server (MSSQL) 通用監控與原生時態模組
 │
 ├── tests/                       # Pytest 單元測試套件
 │   ├── conftest.py              # 測試組態與資料庫 Fixtures
@@ -161,7 +184,9 @@ db_timemachine/
 │   ├── test_snapshot.py         # 設計 A 週期與快照測試
 │   ├── test_event_sourcing.py   # 設計 C 重播與檢查點測試
 │   ├── test_native_temporal.py  # 設計 D 原生時態查詢測試
-│   └── test_cross_designs.py    # 跨設計結果一致性比對測試
+│   ├── test_cross_designs.py    # 跨設計結果一致性比對測試
+│   ├── test_generic_monitor.py  # MySQL 通用即時監控測試
+│   └── test_mssql_monitor.py    # SQL Server 通用即時監控測試
 │
 ├── figures/                     # Matplotlib 效能評測長條圖產出目錄
 │   ├── 01_storage_size.png      # 儲存空間佔用比較
