@@ -1,8 +1,8 @@
 """
 資料庫時光機：Streamlit 互動式視覺化介面 (app.py)
 支援雙模式運作：
-1. 🔬 專題實驗模式 (A/B/C/D 比較)：針對示範銀行帳戶模型，比較四種架構設計並一鍵模擬災難與還原。
-2. 🌐 通用即時監控模式 (任意資料庫/資料表)：連接任何 MySQL / MariaDB 伺服器，動態探索使用者自建的
+1. 專題實驗模式 (A/B/C/D 比較)：針對示範銀行帳戶模型，比較四種架構設計並一鍵模擬災難與還原。
+2. 通用即時監控模式 (任意資料庫/資料表)：連接任何 MySQL / MariaDB 伺服器，動態探索使用者自建的
    任意資料庫與資料表，一鍵掛載即時監控與時光機追蹤、即時監看變動、比對差異與還原。
 """
 
@@ -33,7 +33,6 @@ from timemachine.mssql_monitor import MssqlMonitor, connect_mssql
 # ==============================================================================
 st.set_page_config(
     page_title="資料庫時光機 (DB Time Machine)",
-    page_icon="⏳",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -45,11 +44,11 @@ st.set_page_config(
 def highlight_diff(row):
     """依據差異狀態欄位套用醒目背景色"""
     st_val = str(row.get("差異狀態", ""))
-    if "🔴" in st_val:
+    if "[刪除]" in st_val:
         return ["background-color: #ffcccc; color: #900; font-weight: bold;"] * len(row)
-    elif "🟡" in st_val:
+    elif "[變更]" in st_val:
         return ["background-color: #fff2cc; color: #996600; font-weight: bold;"] * len(row)
-    elif "🟢" in st_val:
+    elif "[新增]" in st_val:
         return ["background-color: #d9ead3; color: #274e13;"] * len(row)
     return [""] * len(row)
 
@@ -100,14 +99,14 @@ def render_timestamp_picker(state_key: str = "target_dt", show_scenario_btn: boo
 
     with c3:
         st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-        st.button("⏱️ 設為現在", use_container_width=True, key=f"{state_key}_now", on_click=_on_now)
+        st.button("設為現在", use_container_width=True, key=f"{state_key}_now", on_click=_on_now)
 
     with c4:
         st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
         if show_scenario_btn and st.session_state.get("scenario_time"):
-            st.button("🎯 回到災難前", use_container_width=True, key=f"{state_key}_scen", on_click=_on_scen)
+            st.button("回到災難前", use_container_width=True, key=f"{state_key}_scen", on_click=_on_scen)
         else:
-            st.button("⏪ 30 秒前", use_container_width=True, key=f"{state_key}_30s", on_click=_on_back_30s)
+            st.button("30 秒前", use_container_width=True, key=f"{state_key}_30s", on_click=_on_back_30s)
 
     return chosen_dt
 
@@ -142,31 +141,31 @@ def render_experiment_mode():
 
     health = check_db_health()
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🔌 資料庫健康狀態")
+    st.sidebar.markdown("### 資料庫健康狀態")
     col_s1, col_s2 = st.sidebar.columns(2)
     with col_s1:
         st.caption("MySQL 8 (3306)")
         if health["mysql"]["ok"]:
-            st.success("✅ 運作中")
+            st.success("[OK] 運作中")
         else:
-            st.error("❌ 未連線")
+            st.error("[ERROR] 未連線")
     with col_s2:
         st.caption("MariaDB 11 (3307)")
         if health["mariadb"]["ok"]:
-            st.success("✅ 運作中")
+            st.success("[OK] 運作中")
         else:
-            st.warning("⚠️ 未連線")
+            st.warning("[WARN] 未連線")
 
     try:
         current_size = tm.storage_size_mb()
-        st.sidebar.metric(label="💾 相關資料表總大小", value=f"{current_size:.3f} MB")
+        st.sidebar.metric(label="相關資料表總大小", value=f"{current_size:.3f} MB")
     except Exception:
-        st.sidebar.metric(label="💾 相關資料表總大小", value="無法讀取")
+        st.sidebar.metric(label="相關資料表總大小", value="無法讀取")
 
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🛠️ 示範與測試情境")
+    st.sidebar.markdown("### 示範與測試情境")
 
-    if st.sidebar.button("💥 一鍵製造情境 (誤刪與篡改)", use_container_width=True, type="primary"):
+    if st.sidebar.button("一鍵製造情境 (誤刪與篡改)", use_container_width=True, type="primary"):
         with st.spinner("正在注入災難情境..."):
             for aid, name, bal in [(88, "張小明 (Acc88)", 50000), (89, "李美麗 (Acc89)", 35000)]:
                 try:
@@ -194,7 +193,7 @@ def render_experiment_mode():
             st.session_state["scenario_time"] = safe_time
             st.rerun()
 
-    if st.sidebar.button("🌱 建立示範種子資料 (5筆帳戶)", use_container_width=True):
+    if st.sidebar.button("建立示範種子資料 (5筆帳戶)", use_container_width=True):
         with st.spinner("正在建立示範資料..."):
             sample_accounts = [
                 (1, "王大同", 12000),
@@ -210,24 +209,24 @@ def render_experiment_mode():
                     tm.apply_update(aid, new_balance=bal, new_name=name)
             if isinstance(tm, SnapshotTimeMachine):
                 tm.take_snapshot()
-            st.sidebar.success("✅ 示範資料已建立！")
+            st.sidebar.success("[OK] 示範資料已建立！")
             st.rerun()
 
-    if st.sidebar.button("🗑️ 清空此設計所有資料", use_container_width=True):
+    if st.sidebar.button("清空此設計所有資料", use_container_width=True):
         tm.reset_data()
         st.sidebar.info("已清空資料表與歷史紀錄。")
         st.rerun()
 
     # 主畫面
-    st.title("🕰️ 資料庫時光機：四種架構實驗對照")
+    st.title("資料庫時光機：四種架構實驗對照")
     st.markdown(f"當前模式：**`{selected_design}`** *(微秒精度 DATETIME(6) 時間旅行與災難還原)*")
 
     if st.session_state.get("scenario_active"):
         st.warning(
-            "🚨 **偵測到模擬災難事件！**  \n"
+            "**偵測到模擬災難事件！**  \n"
             "- **帳戶 #88** (張小明) 遭到不當刪除！  \n"
             "- **帳戶 #89** (李美麗) 餘額遭到惡意篡改為負數！  \n"
-            "💡 **建議動作**：目標時間點已鎖定至事故發生前，請使用下方 **「還原此筆」** 或 **「還原整表」** 進行救援！"
+            "**建議動作**：目標時間點已鎖定至事故發生前，請使用下方 **「還原此筆」** 或 **「還原整表」** 進行救援！"
         )
 
     st.markdown("### 1. 選擇要回溯的歷史時間點 (AS OF Timestamp)")
@@ -251,13 +250,13 @@ def render_experiment_mode():
     for aid in all_ids:
         h, c = hist_map.get(aid), curr_map.get(aid)
         if h is not None and c is None:
-            status = "🔴 目前已被刪除"
+            status = "[刪除] 目前已被刪除"
         elif h is None and c is not None:
-            status = "🟢 該時間點後才新增"
+            status = "[新增] 該時間點後才新增"
         elif h["name"] != c["name"] or h["balance"] != c["balance"]:
-            status = "🟡 餘額或名稱已變更"
+            status = "[變更] 餘額或名稱已變更"
         else:
-            status = "⚪ 內容完全相同"
+            status = "[相同] 內容完全相同"
 
         diff_data.append({
             "帳戶 ID": aid,
@@ -270,20 +269,20 @@ def render_experiment_mode():
 
     col_tbl1, col_tbl2 = st.columns(2)
     with col_tbl1:
-        st.markdown(f"#### 📜 時間點之歷史狀態 (共 {len(historical_rows)} 筆)")
+        st.markdown(f"#### 時間點之歷史狀態 (共 {len(historical_rows)} 筆)")
         if historical_rows:
             st.dataframe(pd.DataFrame(historical_rows)[["id", "name", "balance", "updated_at"]], use_container_width=True, height=250)
         else:
             st.info("該時間點無任何帳戶資料。")
 
     with col_tbl2:
-        st.markdown(f"#### 🏢 目前最新主表狀態 (共 {len(current_rows)} 筆)")
+        st.markdown(f"#### 目前最新主表狀態 (共 {len(current_rows)} 筆)")
         if current_rows:
             st.dataframe(pd.DataFrame(current_rows)[["id", "name", "balance", "updated_at"]], use_container_width=True, height=250)
         else:
             st.info("目前主表無任何帳戶。")
 
-    st.markdown("#### 🔍 差異比對分析總表 (Diff Analysis)")
+    st.markdown("#### 差異比對分析總表 (Diff Analysis)")
     if diff_data:
         st.dataframe(pd.DataFrame(diff_data).style.apply(highlight_diff, axis=1), use_container_width=True, height=260)
     else:
@@ -293,12 +292,12 @@ def render_experiment_mode():
     st.markdown("### 3. 時光還原操作 (Restore to Timestamp)")
     r_col1, r_col2 = st.columns(2)
     with r_col1:
-        st.markdown("#### 🎯 單筆還原 (Restore One)")
+        st.markdown("#### 單筆還原 (Restore One)")
         restore_acc_id = st.number_input("輸入欲還原的帳戶 ID：", min_value=1, value=88, step=1)
-        if st.button("🔄 執行單筆還原", use_container_width=True):
+        if st.button("執行單筆還原", use_container_width=True):
             try:
                 if tm.restore_one(restore_acc_id, chosen_datetime):
-                    st.success(f"✅ 帳戶 #{restore_acc_id} 已成功還原！")
+                    st.success(f"[OK] 帳戶 #{restore_acc_id} 已成功還原！")
                     st.rerun()
                 else:
                     st.info(f"帳戶 #{restore_acc_id} 與目標狀態已完全相符。")
@@ -306,12 +305,12 @@ def render_experiment_mode():
                 st.error(f"單筆還原失敗：{e}")
 
     with r_col2:
-        st.markdown("#### 🚀 整表還原 (Restore All)")
+        st.markdown("#### 整表還原 (Restore All)")
         st.markdown("<div style='height: 44px;'></div>", unsafe_allow_html=True)
-        if st.button("⚠️ 執行全表一鍵還原 (Restore All)", use_container_width=True, type="primary"):
+        if st.button("[WARN] 執行全表一鍵還原 (Restore All)", use_container_width=True, type="primary"):
             try:
                 affected = tm.restore_all(chosen_datetime)
-                st.success(f"🎉 整表還原成功！共變更 {affected} 筆資料列。")
+                st.success(f"整表還原成功！共變更 {affected} 筆資料列。")
                 st.session_state["scenario_active"] = False
                 st.rerun()
             except Exception as e:
@@ -337,7 +336,7 @@ def render_experiment_mode():
 # ==============================================================================
 def render_universal_monitor_mode() -> bool:
     """渲染通用即時監控模式（支援 MySQL 8、MariaDB 11、SQL Server），回傳是否開啟自動刷新"""
-    st.sidebar.markdown("### 🔌 資料庫連線設定")
+    st.sidebar.markdown("### 資料庫連線設定")
     engine_choice = st.sidebar.radio(
         "資料庫引擎：",
         ["MySQL 8", "MariaDB 11", "SQL Server (MSSQL)"],
@@ -346,7 +345,7 @@ def render_universal_monitor_mode() -> bool:
 
     if engine_choice == "SQL Server (MSSQL)":
         db_type = "mssql"
-        with st.sidebar.expander("🔧 SQL Server 連線參數", expanded=True):
+        with st.sidebar.expander("SQL Server 連線參數", expanded=True):
             server = st.text_input("伺服器名稱 (Server)", value="localhost", help="預設為本機 localhost；若為 Express 版請填 localhost\\SQLEXPRESS")
             trusted = st.checkbox("使用 Windows 驗證 (免密碼，同 SSMS)", value=True)
             user, password = "", ""
@@ -357,7 +356,7 @@ def render_universal_monitor_mode() -> bool:
     else:
         db_type = "mysql" if engine_choice == "MySQL 8" else "mariadb"
         default_cfg = get_mysql_config() if db_type == "mysql" else get_mariadb_config()
-        with st.sidebar.expander("🔧 自訂連線參數 (預設讀取 .env)", expanded=False):
+        with st.sidebar.expander("自訂連線參數 (預設讀取 .env)", expanded=False):
             host = st.text_input("主機 (Host)", value=default_cfg["host"])
             port = st.number_input("埠號 (Port)", value=int(default_cfg["port"]), min_value=1, max_value=65535)
             user = st.text_input("帳號 (User)", value=default_cfg["user"])
@@ -370,14 +369,14 @@ def render_universal_monitor_mode() -> bool:
             conn = connect_mssql(server=server, trusted_connection=trusted, user=user, password=password)
         else:
             conn = connect_custom(host, port, user, password, db_type=db_type)
-        st.sidebar.success(f"✅ 已連線至 {engine_choice} ({conn_label})")
+        st.sidebar.success(f"[OK] 已連線至 {engine_choice} ({conn_label})")
     except Exception as e:
-        st.title("🌐 通用資料庫即時監控與時光機")
-        st.error(f"❌ 連線失敗：{e}")
+        st.title("通用資料庫即時監控與時光機")
+        st.error(f"[ERROR] 連線失敗：{e}")
         if db_type == "mssql":
             st.info("若尚未安裝 SQL Server 驅動套件，請先在終端機執行：`pip install pyodbc`")
         else:
-            st.info("請確認資料庫已啟動，或在左側欄「🔧 自訂連線參數」填寫正確的主機、埠號與帳號密碼。")
+            st.info("請確認資料庫已啟動，或在左側欄「自訂連線參數」填寫正確的主機、埠號與帳號密碼。")
         return False
 
     # 統一操作介面轉接（消除 MySQL/MariaDB 與 MSSQL 的重複代碼）
@@ -409,32 +408,32 @@ def render_universal_monitor_mode() -> bool:
     try:
         databases = list_dbs(conn)
         if not databases:
-            st.title("🌐 通用資料庫即時監控與時光機")
+            st.title("通用資料庫即時監控與時光機")
             st.warning("目前伺服器上找不到任何使用者資料庫，請先建立資料庫（例如 `CREATE DATABASE MyTestDB;`）。")
             return False
 
-        selected_db = st.sidebar.selectbox("📂 選擇監控資料庫 (Database)：", databases)
+        selected_db = st.sidebar.selectbox("選擇監控資料庫 (Database)：", databases)
         tables = list_tbls(conn, selected_db)
 
         st.sidebar.markdown("---")
         col_r1, col_r2 = st.sidebar.columns(2)
         with col_r1:
-            if st.button("🔄 立即刷新", use_container_width=True):
+            if st.button("立即刷新", use_container_width=True):
                 st.rerun()
         with col_r2:
-            auto_refresh = st.checkbox("⏱️ 自動監控 (3秒)", value=False)
+            auto_refresh = st.checkbox("自動監控 (3秒)", value=False)
 
-        st.title("🌐 通用資料庫即時監控與時光機")
+        st.title("通用資料庫即時監控與時光機")
         st.caption(
             f"連線目標：`{engine_choice}` (`{conn_label}`) ｜ "
             f"最後刷新時間：`{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}`"
         )
 
         if not tables:
-            st.info(f"資料庫 `{selected_db}` 目前沒有任何資料表。您可以隨時建立新表，點擊左側「🔄 立即刷新」即可看見。")
+            st.info(f"資料庫 `{selected_db}` 目前沒有任何資料表。您可以隨時建立新表，點擊左側「立即刷新」即可看見。")
             return auto_refresh
 
-        selected_table = st.sidebar.selectbox("📋 選擇監控資料表 (Table)：", tables)
+        selected_table = st.sidebar.selectbox("選擇監控資料表 (Table)：", tables)
         schema = get_schema(conn, selected_db, selected_table)
         columns = schema["columns"]
         pk_col = schema["pk_col"]
@@ -447,30 +446,30 @@ def render_universal_monitor_mode() -> bool:
         m1.metric("監控目標", f"{selected_db}.{selected_table}")
         m2.metric("目前資料列數 (上限500)", f"{len(current_rows)} 筆")
         m3.metric("資料表總大小", f"{size_mb:.3f} MB")
-        m4.metric("時光機狀態", "✅ 已啟用錄影" if is_tracked else "⚪ 未啟用")
+        m4.metric("時光機狀態", "[OK] 已啟用錄影" if is_tracked else "[相同] 未啟用")
 
         # ------------------------------------------------------------------
         # 時光機掛載控制區塊
         # ------------------------------------------------------------------
         if not is_tracked:
             st.warning(
-                f"⚠️ 資料表 `{selected_db}.{selected_table}` 目前為**普通資料表**，尚未掛載時光機追蹤。  \n"
+                f"[WARN] 資料表 `{selected_db}.{selected_table}` 目前為**普通資料表**，尚未掛載時光機追蹤。  \n"
                 f"您可以即時監看它的目前內容；若想記錄每一次異動與支持回溯還原，請點擊下方按鈕一鍵啟用："
             )
             if db_type in ("mysql", "mssql") and not pk_col:
-                st.error("❌ 此表沒有「單一欄位主鍵 (Primary Key)」，請先設定主鍵（例如 `id INT PRIMARY KEY`）後再啟用時光機。")
+                st.error("[ERROR] 此表沒有「單一欄位主鍵 (Primary Key)」，請先設定主鍵（例如 `id INT PRIMARY KEY`）後再啟用時光機。")
             else:
                 if db_type == "mssql":
-                    btn_label = f"⚡ 一鍵啟用 SQL Server 原生時光機 (SYSTEM_VERSIONING = ON)"
+                    btn_label = f"一鍵啟用 SQL Server 原生時光機 (SYSTEM_VERSIONING = ON)"
                 elif db_type == "mariadb":
-                    btn_label = "⚡ 一鍵啟用 MariaDB 原生時光機 (ADD SYSTEM VERSIONING)"
+                    btn_label = "一鍵啟用 MariaDB 原生時光機 (ADD SYSTEM VERSIONING)"
                 else:
-                    btn_label = f"⚡ 一鍵為 `{selected_table}` 掛載即時監控觸發器 (建立 {selected_table}_tm_history)"
+                    btn_label = f"一鍵為 `{selected_table}` 掛載即時監控觸發器 (建立 {selected_table}_tm_history)"
 
                 if st.button(btn_label, type="primary"):
                     try:
                         init_cnt = enable_fn(conn, selected_db, selected_table)
-                        st.success(f"🎉 已成功啟用時光機！（{f'已保留既有 {init_cnt} 筆初始快照' if db_type == 'mysql' else '原生版本控制已開啟'}）")
+                        st.success(f"已成功啟用時光機！（{f'已保留既有 {init_cnt} 筆初始快照' if db_type == 'mysql' else '原生版本控制已開啟'}）")
                         st.rerun()
                     except Exception as e:
                         st.error(f"啟用失敗：{e}")
@@ -478,7 +477,7 @@ def render_universal_monitor_mode() -> bool:
         # ------------------------------------------------------------------
         # 即時資料監控視圖
         # ------------------------------------------------------------------
-        st.markdown("### 📡 即時資料表內容 (Live View)")
+        st.markdown("### 即時資料表內容 (Live View)")
         if current_rows:
             st.dataframe(pd.DataFrame(current_rows), use_container_width=True, height=260)
         else:
@@ -489,21 +488,21 @@ def render_universal_monitor_mode() -> bool:
         # ------------------------------------------------------------------
         if is_tracked:
             st.markdown("---")
-            st.markdown("### 🕰️ 時間點旅行與異動差異比對")
+            st.markdown("### 時間點旅行與異動差異比對")
             chosen_dt = render_timestamp_picker("univ_target_dt", show_scenario_btn=False)
 
             hist_rows = query_at_fn(conn, selected_db, selected_table, chosen_dt)
 
             c_left, c_right = st.columns(2)
             with c_left:
-                st.markdown(f"#### 📜 `{chosen_dt.strftime('%H:%M:%S.%f')}` 歷史狀態 ({len(hist_rows)} 筆)")
+                st.markdown(f"#### `{chosen_dt.strftime('%H:%M:%S.%f')}` 歷史狀態 ({len(hist_rows)} 筆)")
                 if hist_rows:
                     st.dataframe(pd.DataFrame(hist_rows), use_container_width=True, height=240)
                 else:
                     st.info("該時間點尚無資料（或當時尚未啟用時光機）。")
 
             with c_right:
-                st.markdown(f"#### 🏢 目前最新狀態 ({len(current_rows)} 筆)")
+                st.markdown(f"#### 目前最新狀態 ({len(current_rows)} 筆)")
                 if current_rows:
                     st.dataframe(pd.DataFrame(current_rows), use_container_width=True, height=240)
                 else:
@@ -519,13 +518,13 @@ def render_universal_monitor_mode() -> bool:
                 for pk in all_pks:
                     hr, cr = h_map.get(pk), c_map.get(pk)
                     if hr is not None and cr is None:
-                        st_label = "🔴 目前已被刪除"
+                        st_label = "[刪除] 目前已被刪除"
                     elif hr is None and cr is not None:
-                        st_label = "🟢 該時間點後才新增"
+                        st_label = "[新增] 該時間點後才新增"
                     elif any(str(hr.get(col)) != str(cr.get(col)) for col in columns):
-                        st_label = "🟡 欄位內容已變更"
+                        st_label = "[變更] 欄位內容已變更"
                     else:
-                        st_label = "⚪ 內容完全相同"
+                        st_label = "[相同] 內容完全相同"
 
                     row_summary = {pk_col: pk, "差異狀態": st_label}
                     for col in columns:
@@ -535,20 +534,20 @@ def render_universal_monitor_mode() -> bool:
                             row_summary[f"{col} (歷史 → 目前)"] = f"{h_val}" if str(h_val) == str(c_val) else f"{h_val} → {c_val}"
                     diff_list.append(row_summary)
 
-                st.markdown("#### 🔍 逐列差異比對 (Diff)")
+                st.markdown("#### 逐列差異比對 (Diff)")
                 if diff_list:
                     st.dataframe(pd.DataFrame(diff_list).style.apply(highlight_diff, axis=1), use_container_width=True, height=250)
 
                 # 還原控制區
                 st.markdown("---")
-                st.markdown("### 🚑 任意資料表救援還原")
+                st.markdown("### 任意資料表救援還原")
                 rc1, rc2 = st.columns(2)
                 with rc1:
                     target_pk = st.text_input(f"輸入要還原的 `{pk_col}` 主鍵值：", value=all_pks[0] if all_pks else "")
-                    if st.button("🔄 單筆還原至目標時間點", use_container_width=True):
+                    if st.button("單筆還原至目標時間點", use_container_width=True):
                         try:
                             if restore_one_fn(conn, selected_db, selected_table, target_pk, chosen_dt):
-                                st.success(f"✅ 主鍵 `{pk_col}={target_pk}` 已還原！")
+                                st.success(f"[OK] 主鍵 `{pk_col}={target_pk}` 已還原！")
                                 st.rerun()
                             else:
                                 st.info("該筆資料與目標時間點完全相符，無需還原。")
@@ -557,17 +556,17 @@ def render_universal_monitor_mode() -> bool:
 
                 with rc2:
                     st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-                    if st.button("⚠️ 全表一鍵還原至目標時間點", use_container_width=True, type="primary"):
+                    if st.button("[WARN] 全表一鍵還原至目標時間點", use_container_width=True, type="primary"):
                         try:
                             cnt = restore_all_fn(conn, selected_db, selected_table, chosen_dt)
-                            st.success(f"🎉 全表還原完成！共校正 {cnt} 筆資料。")
+                            st.success(f"全表還原完成！共校正 {cnt} 筆資料。")
                             st.rerun()
                         except Exception as e:
                             st.error(f"全表還原失敗：{e}")
 
                 # 單筆異動時間軸
                 st.markdown("---")
-                st.markdown(f"### 📜 單筆資料完整異動時間軸 (依主鍵 `{pk_col}`)")
+                st.markdown(f"### 單筆資料完整異動時間軸 (依主鍵 `{pk_col}`)")
                 hist_pk = st.text_input(f"查詢異動履歷的 `{pk_col}`：", value=all_pks[0] if all_pks else "", key="univ_hist_pk")
                 if hist_pk:
                     row_hist = history_fn(conn, selected_db, selected_table, hist_pk)
@@ -584,19 +583,19 @@ def render_universal_monitor_mode() -> bool:
 # ==============================================================================
 # 主程式進入點：側邊欄模式切換
 # ==============================================================================
-st.sidebar.title("⏳ 資料庫時光機")
+st.sidebar.title("資料庫時光機")
 app_mode = st.sidebar.radio(
     "選擇系統模式：",
     [
-        "🔬 專題實驗模式 (A/B/C/D 比較)",
-        "🌐 通用即時監控模式 (任意資料庫/資料表)",
+        "專題實驗模式 (A/B/C/D 比較)",
+        "通用即時監控模式 (任意資料庫/資料表)",
     ],
     index=0,
 )
 st.sidebar.markdown("---")
 
 auto_refresh_needed = False
-if app_mode == "🔬 專題實驗模式 (A/B/C/D 比較)":
+if app_mode == "專題實驗模式 (A/B/C/D 比較)":
     render_experiment_mode()
 else:
     auto_refresh_needed = render_universal_monitor_mode()

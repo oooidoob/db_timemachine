@@ -191,7 +191,7 @@ class BenchmarkRunner:
         # 檢查 MariaDB 連線狀態
         health = check_db_health()
         if not health["mariadb"]["ok"]:
-            print("⚠️ 提示: 未偵測到 MariaDB 服務 (3307)，將略過 Baseline (MariaDB) 與 設計 D。")
+            print("[WARN] 提示: 未偵測到 MariaDB 服務 (3307)，將略過 Baseline (MariaDB) 與 設計 D。")
             self.skip_mariadb = True
 
         self.figures_dir = os.path.join(BASE_DIR, "figures")
@@ -202,7 +202,7 @@ class BenchmarkRunner:
     def run_all(self):
         """執行完整測試流程"""
         print("\n" + "=" * 70)
-        print(f" 🚀 開始執行資料庫時光機效能評測 (Benchmark)")
+        print(f" 開始執行資料庫時光機效能評測 (Benchmark)")
         print(f"    - 測試帳戶總數 (N): {self.num_accounts}")
         print(f"    - 平均更新次數 (K): {self.updates_per_account}")
         print(f"    - 歷史變更步驟: {self.history_steps} 步 (至少 50% 命中抽樣帳戶)")
@@ -238,7 +238,7 @@ class BenchmarkRunner:
         self.plot_figures()
 
         print("\n" + "=" * 70)
-        print(" 🎉 所有基準測試完成！已產出 results.csv, results.md 與 figures/ 圖表。")
+        print(" 所有基準測試完成！已產出 results.csv, results.md 與 figures/ 圖表。")
         print("=" * 70)
 
     def _benchmark_design(self, label: str, tm: BaseTimeMachine) -> Dict[str, Any]:
@@ -439,7 +439,7 @@ class BenchmarkRunner:
             exp_single = pre_disaster_state[test_single_id]
             if curr_single is None or curr_single["name"] != exp_single["name"] or curr_single["balance"] != exp_single["balance"]:
                 raise RuntimeError(
-                    f"❌ [{label}] 單筆還原後與災難前不一致！帳戶={test_single_id}, 預期={exp_single}, 實際={curr_single}"
+                    f"[ERROR] [{label}] 單筆還原後與災難前不一致！帳戶={test_single_id}, 預期={exp_single}, 實際={curr_single}"
                 )
 
             # ---------------------------
@@ -458,7 +458,7 @@ class BenchmarkRunner:
                 exp = pre_disaster_state[aid]
                 if curr is None or curr["name"] != exp["name"] or curr["balance"] != exp["balance"]:
                     raise RuntimeError(
-                        f"❌ [{label}] 逐筆還原 1000 筆後與災難前不一致！帳戶={aid}, 預期={exp}, 實際={curr}"
+                        f"[ERROR] [{label}] 逐筆還原 1000 筆後與災難前不一致！帳戶={aid}, 預期={exp}, 實際={curr}"
                     )
 
             # ---------------------------
@@ -476,7 +476,7 @@ class BenchmarkRunner:
                 exp = pre_disaster_state[aid]
                 if curr is None or curr["name"] != exp["name"] or curr["balance"] != exp["balance"]:
                     raise RuntimeError(
-                        f"❌ [{label}] 整表還原後與災難前不一致！帳戶={aid}, 預期={exp}, 實際={curr}"
+                        f"[ERROR] [{label}] 整表還原後與災難前不一致！帳戶={aid}, 預期={exp}, 實際={curr}"
                     )
 
             # 同步更新真實歷史字典以反映還原後的正確狀態
@@ -579,7 +579,7 @@ class BenchmarkRunner:
                     cur.execute(f"ALTER TABLE `{tm.history_table}` ADD INDEX idx_acc_history_range (valid_from, valid_to);")
                 conn.commit()
             except Exception as rebuild_err:
-                print(f"\n❌ [嚴重錯誤] 設計 B 無索引量測後重建索引失敗：{rebuild_err}")
+                print(f"\n[ERROR] [嚴重錯誤] 設計 B 無索引量測後重建索引失敗：{rebuild_err}")
                 print("為避免污染後續測試資料庫狀態，基準測試強制中止！")
                 raise RuntimeError(f"設計 B 重建索引失敗: {rebuild_err}") from rebuild_err
 
@@ -612,7 +612,7 @@ class BenchmarkRunner:
                     cur.execute(f"ALTER TABLE `{tm.events_table}` ADD INDEX idx_events_time (occurred_at);")
                 conn.commit()
             except Exception as rebuild_err:
-                print(f"\n❌ [嚴重錯誤] 設計 C 無索引量測後重建索引失敗：{rebuild_err}")
+                print(f"\n[ERROR] [嚴重錯誤] 設計 C 無索引量測後重建索引失敗：{rebuild_err}")
                 print("為避免污染後續測試資料庫狀態，基準測試強制中止！")
                 raise RuntimeError(f"設計 C 重建索引失敗: {rebuild_err}") from rebuild_err
 
@@ -626,7 +626,7 @@ class BenchmarkRunner:
             writer = csv.DictWriter(f, fieldnames=keys)
             writer.writeheader()
             writer.writerows(self.results_data)
-        print(f"📄 已儲存 CSV 報表: {csv_path}")
+        print(f"已儲存 CSV 報表: {csv_path}")
 
     def export_markdown(self):
         """將評測指標格式化為 Markdown 表格並儲存至 results.md"""
@@ -696,12 +696,12 @@ class BenchmarkRunner:
 
         with open(md_path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
-        print(f"📝 已儲存 Markdown 報表: {md_path}")
+        print(f"已儲存 Markdown 報表: {md_path}")
 
     def plot_figures(self):
         """使用 Matplotlib 產出 4 張比較長條圖至 figures/，標籤絕不截斷"""
         if not HAS_PLOT_DEPS:
-            print("⚠️ 未安裝 matplotlib，略過圖表產出。請執行 pip install matplotlib 安裝。")
+            print("[WARN] 未安裝 matplotlib，略過圖表產出。請執行 pip install matplotlib 安裝。")
             return
 
         plt.rcParams["font.sans-serif"] = ["Microsoft JhengHei", "SimHei", "PingFang SC", "DejaVu Sans", "Arial"]
@@ -810,7 +810,7 @@ class BenchmarkRunner:
         plt.savefig(os.path.join(self.figures_dir, "04_restore_latency.png"), dpi=300)
         plt.close()
 
-        print(f"📊 已產出 4 張比較長條圖至: {self.figures_dir}")
+        print(f"已產出 4 張比較長條圖至: {self.figures_dir}")
 
 
 def main():

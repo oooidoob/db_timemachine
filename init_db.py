@@ -16,7 +16,7 @@ from timemachine.db import (
 
 def main():
     print("=" * 60)
-    print(" 🚀 資料庫時光機：環境連線檢查與結構初始化")
+    print(" 資料庫時光機：環境連線檢查與結構初始化")
     print("=" * 60)
 
     # 1. 檢查資料庫健康狀態
@@ -24,11 +24,11 @@ def main():
     mysql_ok = health["mysql"]["ok"]
     mariadb_ok = health["mariadb"]["ok"]
 
-    print(f"[1/3] MySQL (埠號 3306) 連線狀態 : {'✅ 正常' if mysql_ok else '❌ 失敗'}")
+    print(f"[1/3] MySQL (埠號 3306) 連線狀態 : {'[OK] 正常' if mysql_ok else '[ERROR] 失敗'}")
     if not mysql_ok:
         print(f"      錯誤說明: {health['mysql']['message']}")
 
-    print(f"[2/3] MariaDB (埠號 3307) 連線狀態: {'✅ 正常' if mariadb_ok else '❌ 失敗'}")
+    print(f"[2/3] MariaDB (埠號 3307) 連線狀態: {'[OK] 正常' if mariadb_ok else '[ERROR] 失敗'}")
     if not mariadb_ok:
         print(f"      錯誤說明: {health['mariadb']['message']}")
 
@@ -48,9 +48,9 @@ def main():
             conn = get_connection("mysql")
             execute_sql_file(conn, mysql_schema_path)
             conn.close()
-            print("      ✅ MySQL 結構與觸發器初始化成功！")
+            print("      [OK] MySQL 結構與觸發器初始化成功！")
         except Exception as e:
-            print(f"      ❌ MySQL 初始化失敗: {e}")
+            print(f"      [ERROR] MySQL 初始化失敗: {e}")
 
     # 3. 初始化 MariaDB 結構
     if mariadb_ok:
@@ -60,12 +60,12 @@ def main():
             conn = get_connection("mariadb")
             execute_sql_file(conn, mariadb_schema_path)
             conn.close()
-            print("      ✅ MariaDB 結構 (WITH SYSTEM VERSIONING) 初始化成功！")
+            print("      [OK] MariaDB 結構 (WITH SYSTEM VERSIONING) 初始化成功！")
         except Exception as e:
-            print(f"      ❌ MariaDB 初始化失敗: {e}")
+            print(f"      [ERROR] MariaDB 初始化失敗: {e}")
 
     print("\n" + "=" * 60)
-    print(" 🎉 資料庫時光機環境準備完成！可以開始執行測試或基準測試。")
+    print(" 資料庫時光機環境準備完成！可以開始執行測試或基準測試。")
     print("=" * 60)
 
 
