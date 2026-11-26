@@ -14,9 +14,15 @@
 # 1. 安裝必要套件
 pip install -r requirements.txt
 
-# 2. 啟動視覺化網頁介面
-streamlit run app.py
+# 2. 啟動視覺化網頁介面（使用 python -m 可避免環境變數 PATH 未設定的問題）
+python -m streamlit run app.py
 ```
+
+> **新電腦第一次執行常見問題排查**：
+> 1. **出現 `Welcome to Streamlit! ... Email:` 停住不動**：這是 Streamlit 首次啟動的問候提示，**直接按一下 Enter 鍵** 跳過即可開啟網頁（之後不會再問）。
+> 2. **直接打 `streamlit run app.py` 顯示「無法辨識 streamlit」**：代表 Python 的 `Scripts` 資料夾未加入系統 `PATH`，請改用上方寫的 **`python -m streamlit run app.py`** 即可。
+> 3. **瀏覽器沒有自動跳出**：請打開 Chrome / Edge，在網址列輸入 `http://localhost:8501`（注意：不要把 `Local URL: http://localhost:8501` 貼到 PowerShell 視窗裡）。
+> 4. **SQL Server 連線失敗**：若您安裝的是免費 Express 版，請在網頁左側「伺服器名稱」將 `localhost` 改為 `localhost\SQLEXPRESS`。
 
 ### 互動網頁介面 (`app.py`) 兩大核心模式
 
